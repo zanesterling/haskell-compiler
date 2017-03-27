@@ -149,6 +149,7 @@ parens m = do
   return n
 
 
+-- Expression types, evaluation, and parsing.
 data Expr
   = Add Expr Expr
   | Mul Expr Expr
