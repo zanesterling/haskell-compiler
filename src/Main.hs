@@ -11,10 +11,16 @@ process :: String -> IO ()
 process line =
   case parseExpr line of
     Left err -> print err
-    Right ex -> putStrLn $
-      case eval ex of
-        Nothing  -> "Cannot evaluate."
-        Just val -> ppexpr val
+    Right ex -> do
+      case typecheck ex of
+        Nothing -> putStrLn "Typecheck failed."
+        Just t  -> do
+          putStr "type is "
+          print t
+          putStrLn $
+            case eval ex of
+              Nothing  -> "Cannot evaluate."
+              Just val -> ppexpr val
 
 main :: IO ()
 main = runInputT defaultSettings loop
