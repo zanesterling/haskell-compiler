@@ -47,44 +47,69 @@ prefixOp s f = Ex.Prefix (reservedOp s >> return f)
 
 
 -- Prefix operators
-table :: Ex.OperatorTable String () Identity Expr
-table = [
+boolOpsTable :: Ex.OperatorTable String () Identity BoolExpr
+boolOpsTable = [
     [
-      prefixOp "succ" Succ
-    , prefixOp "pred" Pred
-    , prefixOp "iszero" IsZero
+      prefixOp "iszero" IsZero
+    ]
+  ]
+
+numOpsTable  :: Ex.OperatorTable String () Identity NumExpr
+numOpsTable  = [
+    [
+      prefixOp "succ"   Succ
+    , prefixOp "pred"   Pred
     ]
   ]
 
 
 -- if/then/else
-ifthen :: Parser Expr
-ifthen = do
+ift :: Parser a -> (BoolExpr -> a -> a -> a) -> Parser a
+ift e ifc = do
   reserved "if"
-  cond <- expr
+  cond <- boolExpr
   reservedOp "then"
-  tr <- expr
+  tr <- e
   reservedOp "else"
-  fl <- expr
-  return $ If cond tr fl
+  fl <- e
+  return $ ifc cond tr fl
+
+boolIfThen :: Parser BoolExpr
+boolIfThen = ift boolExpr BoolIf
+numIfThen  = ift numExpr  NumIf
 
 
 -- Constants
-true, false, zero :: Parser Expr
+true, false :: Parser BoolExpr
 true  = reserved "true"  >> return Tr
 false = reserved "false" >> return Fl
+
+zero :: Parser NumExpr
 zero  = reservedOp "0"   >> return Zero
 
+-- Expressions
 expr :: Parser Expr
-expr = Ex.buildExpressionParser table factor
+expr = (BoolExpr <$> boolExpr) <|> (NumExpr <$> numExpr)
 
-factor :: Parser Expr
-factor =
+boolExpr :: Parser BoolExpr
+boolExpr = Ex.buildExpressionParser table boolFactor
+
+boolFactor :: Parser BoolExpr
+boolFactor =
       true
   <|> false
-  <|> zero
-  <|> ifthen
-  <|> parens expr
+  <|> boolIfThen
+  <|> parens boolExpr
+
+numExpr :: Parser NumExpr
+numExpr = Ex.buildExpressionParser table numFactor
+
+numFactor :: Parser NumExpr
+numFactor =
+      zero
+  <|> numIfThen
+  <|> parens numExpr
+
 
 contents :: Parser a -> Parser a
 contents p = do
@@ -92,6 +117,5 @@ contents p = do
   r <- p
   eof
   return r
-
 
 parseExpr s = parse (contents expr) "<stdin>" s

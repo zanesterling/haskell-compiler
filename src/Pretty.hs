@@ -15,13 +15,23 @@ class Pretty p where
   ppr :: Int -> p -> Doc
 
 instance Pretty Expr where
+  ppr p (NumExpr  x) = ppr p x
+  ppr p (BoolExpr x) = ppr p x
+
+instance Pretty NumExpr where
   ppr _ Zero = PP.text "0"
-  ppr _ Tr = PP.text "true"
-  ppr _ Fl = PP.text "false"
   ppr p (Succ a) = (parensIf (p > 0) $ PP.text "succ" <+> ppr (p+1) a)
-  ppr p (Pred a) = (parensIf (p > 0) $ PP.text "succ" <+> ppr (p+1) a)
+  ppr p (Pred a) = (parensIf (p > 0) $ PP.text "pred" <+> ppr (p+1) a)
+  ppr p (NumIf  a b c) =
+        PP.text "if"   <+> ppr p a
+    <+> PP.text "then" <+> ppr p b
+    <+> PP.text "else" <+> ppr p c
+
+instance Pretty BoolExpr where
+  ppr _ Tr  = PP.text "true"
+  ppr _ Fl  = PP.text "false"
   ppr p (IsZero a) = (parensIf (p > 0) $ PP.text "iszero" <+> ppr (p+1) a)
-  ppr p (If a b c) =
+  ppr p (BoolIf a b c) =
         PP.text "if"   <+> ppr p a
     <+> PP.text "then" <+> ppr p b
     <+> PP.text "else" <+> ppr p c
