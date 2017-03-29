@@ -42,6 +42,9 @@ semiSep = Tok.semiSep lexer
 reservedOp :: String -> Parser ()
 reservedOp = Tok.reservedOp lexer
 
+whitespace :: Parser ()
+whitespace = Tok.whiteSpace lexer
+
 prefixOp :: String -> (a -> a) -> Ex.Operator String () Identity a
 prefixOp s f = Ex.Prefix (reservedOp s >> return f)
 
@@ -66,16 +69,19 @@ factor =
 lambda :: Parser Expr
 lambda = do
   char '\\'
+  whitespace
   argname <- varname
+  whitespace
   char '.'
+  whitespace
   e <- expr
   return $ Lam argname e
 
 application :: Parser Expr
 application = do
   x <- expr
-  Tok.whiteSpace lexer
-  xs <- many1 $ do { x <- expr; Tok.whiteSpace lexer; return x }
+  whitespace
+  xs <- many1 $ do { x <- expr; whitespace; return x }
   return $ foldl (\a x -> App a x) x xs
 
 variable :: Parser Expr
@@ -88,7 +94,7 @@ varname = many1 alphaNum
 -- Interface
 contents :: Parser a -> Parser a
 contents p = do
-  Tok.whiteSpace lexer
+  whitespace
   r <- p
   eof
   return r
