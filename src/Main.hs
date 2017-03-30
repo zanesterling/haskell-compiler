@@ -3,7 +3,10 @@ module Main where
 import Control.Monad.Trans
 import System.Console.Haskeline
 
+import Eval
 import Parser
+import Pretty
+import Syntax
 
 
 main :: IO ()
@@ -19,4 +22,10 @@ process :: String -> IO ()
 process line =
   case parseExpr line of
     Left err -> print err
-    Right exp -> print exp
+    Right exp -> do
+      let (v, steps) = runEval exp
+      mapM_ showStep steps
+      print v
+
+showStep :: (Int, Expr) -> IO ()
+showStep (d, x) = putStrLn $ (replicate d ' ') ++ "=> " ++ ppexpr x
