@@ -60,9 +60,14 @@ expr = Ex.buildExpressionParser table factor
 
 factor :: Parser Expr
 factor =
+      try application
+  <|> lambda
+  <|> variable
+  <|> parens expr
+
+subExpr =
       lambda
   <|> variable
-  <|> try (parens application)
   <|> parens expr
 
 
@@ -79,9 +84,9 @@ lambda = do
 
 application :: Parser Expr
 application = do
-  x <- expr
+  x <- subExpr
   whitespace
-  xs <- many1 $ do { x <- expr; whitespace; return x }
+  xs <- many1 $ do { x <- subExpr; whitespace; return x }
   return $ foldl (\a x -> App a x) x xs
 
 variable :: Parser Expr
