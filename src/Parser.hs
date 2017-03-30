@@ -59,10 +59,10 @@ expr :: Parser Expr
 expr = Ex.buildExpressionParser table factor
 
 factor :: Parser Expr
-factor = 
+factor =
       lambda
-  <|> parens application
   <|> variable
+  <|> try (parens application)
   <|> parens expr
 
 
