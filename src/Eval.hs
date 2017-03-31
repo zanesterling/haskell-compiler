@@ -54,10 +54,6 @@ record x = do
 -- Evaluation
 eval :: Eval.Scope -> Expr -> Eval Value
 eval scope x = case x of
-  Var n -> do
-    record x
-    return $ scope Map.! n
-
   Lam n body -> inc $ do
     return $ VClosure n body scope
 
@@ -67,6 +63,10 @@ eval scope x = case x of
     y <- eval scope b
     record b
     appl x y
+
+  Var n -> do
+    record x
+    return $ scope Map.! n
 
   Lit (LInt  a) -> return $ VInt (fromIntegral a)
   Lit (LBool a) -> return $ VBool a
