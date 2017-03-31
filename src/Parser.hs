@@ -61,13 +61,12 @@ expr = Ex.buildExpressionParser table factor
 factor :: Parser Expr
 factor =
       try application
-  <|> lambda
-  <|> variable
-  <|> parens expr
+  <|> subExpr
 
 subExpr =
       lambda
   <|> variable
+  <|> literal
   <|> parens expr
 
 
@@ -91,6 +90,9 @@ application = do
 
 variable :: Parser Expr
 variable = Var <$> varname
+
+literal :: Parser Expr
+literal = Lit . LInt . read <$> many1 digit
 
 varname :: Parser Name
 varname = many1 alphaNum
