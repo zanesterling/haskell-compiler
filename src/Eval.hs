@@ -23,7 +23,7 @@ instance Show Value where
   show (VBool x)  = show x
   show (VClosure v x env) =
        ppexpr (Lam v x)
-    ++ if null env then "" else ("|" ++ show env)
+    ++ if null env then "" else " | " ++ show (Map.assocs env)
 
 type Scope = Map.Map String Value
 emptyScope = Map.empty
