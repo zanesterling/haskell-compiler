@@ -36,6 +36,9 @@ parens = Tok.parens lexer
 reserved :: String -> Parser ()
 reserved = Tok.reserved lexer
 
+identifier :: Parser String
+identifier = Tok.identifier lexer
+
 semiSep :: Parser a -> Parser [a]
 semiSep = Tok.semiSep lexer
 
@@ -72,21 +75,18 @@ subExpr =
 
 lambda :: Parser Expr
 lambda = do
-  char '\\'
-  whitespace
-  argname <- varname
-  whitespace
-  char '.'
-  whitespace
-  e <- expr
-  return $ Lam argname e
+  reservedOp "\\"
+  args <- many1 identifier
+  reservedOp "."
+  body <- expr
+  return $ foldr Lam body args
 
 application :: Parser Expr
 application = do
   x <- subExpr
   whitespace
   xs <- many1 $ do { x <- subExpr; whitespace; return x }
-  return $ foldl (\a x -> App a x) x xs
+  return $ foldl App x xs
 
 variable :: Parser Expr
 variable = Var <$> varname
