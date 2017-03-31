@@ -21,8 +21,8 @@ check = runExcept . typeof
 
 typeof :: Expr -> Check Type
 typeof x = case x of
-  Lit (LInt  _) -> return TNat
-  Lit (LBool _) -> return TBool
+  Lit LInt{}  -> return TNat
+  Lit LBool{} -> return TBool
 
   App a b -> do
     ta <- typeof a
