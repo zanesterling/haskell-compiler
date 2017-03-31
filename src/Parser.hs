@@ -1,4 +1,6 @@
-module Parser where
+module Parser (
+  parseExpr
+) where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)
@@ -51,6 +53,12 @@ whitespace = Tok.whiteSpace lexer
 prefixOp :: String -> (a -> a) -> Ex.Operator String () Identity a
 prefixOp s f = Ex.Prefix (reservedOp s >> return f)
 
+natural :: Parser Integer
+natural = Tok.natural lexer
+
+symbol :: String -> Parser String
+symbol = Tok.symbol lexer
+
 
 -- Operators
 table :: Ex.OperatorTable String () Identity Expr
@@ -66,10 +74,11 @@ factor =
       try application
   <|> subExpr
 
+subExpr :: Parser Expr
 subExpr =
       lambda
-  <|> variable
   <|> literal
+  <|> variable
   <|> parens expr
 
 
@@ -92,7 +101,13 @@ variable :: Parser Expr
 variable = Var <$> varname
 
 literal :: Parser Expr
-literal = Lit . LInt . read <$> many1 digit
+literal = number <|> bool
+
+number :: Parser Expr
+number = Lit . LInt  . fromIntegral <$> natural
+
+bool :: Parser Expr
+bool = Lit . LBool . read <$> (symbol "True" <|> symbol "False")
 
 varname :: Parser Name
 varname = many1 alphaNum
