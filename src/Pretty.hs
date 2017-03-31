@@ -28,9 +28,9 @@ instance Pretty Expr where
     parensIf (p>0) (char '\\' <> hsep vars <+> text "." <+> body)
     where
       vars = map (ppr 0) (viewVars e)
-      body = ppr (p+1) (viewBody e)
+      body = ppr 0 (viewBody e)
   ppr p e@(App _ _) = parensIf (p>0) $ hsep args
-    where args = map (ppr (p+1)) (viewArgs e)
+    where args = map (ppr (p+1)) (reverse $ viewArgs e)
 
 
 -- Get the varnames of a multi-arg function.
@@ -45,7 +45,7 @@ viewBody x = x
 
 -- Turn a chained application into a list of expressions.
 viewArgs :: Expr -> [Expr]
-viewArgs (App a b) = a : (viewArgs b)
+viewArgs (App a b) = b : (viewArgs a)
 viewArgs x = [x]
 
 ppexpr :: Expr -> String
