@@ -24,24 +24,10 @@ instance Pretty Expr where
   ppr _ (Var n)   = text n
   ppr p (Lit (LInt  i)) = text $ show i
   ppr p (Lit (LBool b)) = text $ show b
-  ppr p e@(Lam _ _) =
-    parensIf (p>0) (char '\\' <> hsep vars <+> text "." <+> body)
-    where
-      vars = map (ppr 0) (viewVars e)
-      body = ppr 0 (viewBody e)
+  ppr p (Lam v t b) = char '\\' <> ppr 0 v <+> text "." <+> ppr 0 b
   ppr p e@(App _ _) = parensIf (p>0) $ hsep args
     where args = map (ppr (p+1)) (reverse $ viewArgs e)
 
-
--- Get the varnames of a multi-arg function.
-viewVars :: Expr -> [Name]
-viewVars (Lam n x) = n : viewVars x
-viewVars _ = []
-
--- Get the body of a multi-arg function.
-viewBody :: Expr -> Expr
-viewBody (Lam _ x) = viewBody x
-viewBody x = x
 
 -- Turn a chained application into a list of expressions.
 viewArgs :: Expr -> [Expr]

@@ -24,7 +24,7 @@ process line =
   case parseExpr line of
     Left err -> print err
     Right expr ->
-      case check expr of
+      case checkTop [] expr of
         Left err -> print err
         Right t  -> do
           print t

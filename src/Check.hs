@@ -1,35 +1,63 @@
-module Check where
+module Check (
+  check,
+  checkTop,
+  TypeError(..)
+) where
 
 import Control.Monad.Except
+import Control.Monad.Reader
 
 import Syntax
-import Type
+
+
+-- Environment for type checking operations
+type Env = [(Name, Type)]
+
+extend :: (Name, Type) -> Env -> Env
+extend = (:)
 
 
 -- Type checking
-type Check a = Except TypeError a
-
 data TypeError
   = Mismatch Type Type
   | NotFunction Type
-  | NotInScope
+  | NotInScope Name
   deriving (Show)
 
-check :: Expr -> Either TypeError Type
-check = runExcept . typeof
+
+type Check a = ExceptT TypeError (Reader Env) a
+
+inEnv :: (Name, Type) -> Check a -> Check a
+inEnv (x,t) = local $ extend (x,t)
+
+lookupVar :: Name -> Check Type
+lookupVar v = do
+  env <- ask
+  case lookup v env of
+    Just e  -> return e
+    Nothing -> throwError $ NotInScope v
 
 
-typeof :: Expr -> Check Type
-typeof x = case x of
-  Lit LInt{}  -> return TNat
+check :: Expr -> Check Type
+check x = case x of
+  Lit LInt{}  -> return TInt
   Lit LBool{} -> return TBool
 
+  Lam v t b -> TArr t <$> (inEnv (v,t) $ check b)
+
   App a b -> do
-    ta <- typeof a
-    tb <- typeof b
+    ta <- check a
+    tb <- check b
     case ta of
       TArr tx ty | tx == tb  -> return ty
                  | otherwise -> throwError $ Mismatch tb tx
-      e -> throwError $ NotFunction ta
+      _ -> throwError $ NotFunction ta
 
-  e -> error $ "type check not implemented for: " ++ show e
+  Var v -> lookupVar v
+
+
+runCheck :: Env -> Check a -> Either TypeError a
+runCheck env = flip runReader env . runExceptT
+
+checkTop :: Env -> Expr -> Either TypeError Type
+checkTop env x = runCheck env $ check x

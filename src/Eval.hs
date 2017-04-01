@@ -22,7 +22,7 @@ instance Show Value where
   show (VInt  x)  = show x
   show (VBool x)  = show x
   show (VClosure v x env) =
-       ppexpr (Lam v x)
+       "\\" ++ v ++ " . " ++ ppexpr x
     ++ if null env then "" else " | " ++ show (Map.assocs env)
 
 type Scope = Map.Map String Value
@@ -54,7 +54,7 @@ record x = do
 -- Evaluation
 eval :: Eval.Scope -> Expr -> Eval Value
 eval scope x = case x of
-  Lam n body -> inc $ do
+  Lam n _ body -> inc $ do
     return $ VClosure n body scope
 
   App a b -> inc $ do
