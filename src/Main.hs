@@ -27,11 +27,11 @@ process line =
       case checkTop [] expr of
         Left err -> print err
         Right t  -> do
-          print t
+          putStrLn $ ppexpr t
           -- Evaluate the expression
           let (v, steps) = runEval expr
-          mapM_ showStep steps
-          print v
+          --mapM_ showStep steps
+          putStrLn $ ppexpr v
 
 showStep :: (Int, Expr) -> IO ()
 showStep (d, x) = putStrLn $ (replicate d ' ') ++ "=> " ++ ppexpr x

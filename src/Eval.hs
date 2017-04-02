@@ -1,12 +1,15 @@
+{-# LANGUAGE FlexibleInstances #-}
+
 module Eval (
   runEval
 ) where
 
 import Control.Monad.State
-import Control.Monad.Writer
+import Control.Monad.Writer (WriterT, runWriterT, tell)
 import Data.List
 import Data.Maybe
 import qualified Data.Map as Map
+import Text.PrettyPrint
 
 import Pretty
 import Syntax
@@ -18,12 +21,18 @@ data Value
   | VBool Bool
   | VClosure String Expr (Eval.Scope)
 
-instance Show Value where
-  show (VInt  x)  = show x
-  show (VBool x)  = show x
-  show (VClosure v x env) =
-       "\\" ++ v ++ " . " ++ ppexpr x
-    ++ if null env then "" else " | " ++ show (Map.assocs env)
+instance Pretty Value where
+  ppr _ (VInt  x)          = text $ show x
+  ppr _ (VBool x)          = text $ show x
+  ppr p (VClosure v x env) =
+       text "\\" <> text v <+> text "." <+> ppr (p+1) x
+    <> if null env
+         then text ""
+         else text " |" <+> (hsep $ map (ppr 0) (Map.assocs env))
+
+instance Pretty (String, Value) where
+  ppr p (n, v) = text "(" <> text n <> text "," <+> ppr 0 v <> text ")"
+
 
 type Scope = Map.Map String Value
 emptyScope = Map.empty
